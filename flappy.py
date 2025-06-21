@@ -15,6 +15,8 @@ class FlappyGame(arcade.Window):
     pipeWidth = 50
     pipeSpace = 250
     numPipes = 3
+    score = 0
+    bestScore = 0
 
     def __init__(self):
         super().__init__(screenWidth, screenHeight, screenTitle)
@@ -48,7 +50,7 @@ class FlappyGame(arcade.Window):
             arcade.draw_lrbt_rectangle_filled(left, right, gapY + gapHalf, screenHeight, arcade.color.BLACK)
             # bottom pipe
             arcade.draw_lrbt_rectangle_filled(left, right, 0, gapY - gapHalf, arcade.color.BLACK)
-            arcade.draw_text(f"Score: {self.score}", 10, screenHeight - 30, arcade.color.RED, 20)
+            arcade.draw_text(f"Score: {self.score}    Best: {self.bestScore}", 10, screenHeight - 30, arcade.color.RED, 20)
 
     def update(self, deltaTime):
         print(f"Bird Y: {self.birdY}, Velocity: {self.birdVelocity}")  # DEBUG
@@ -65,11 +67,14 @@ class FlappyGame(arcade.Window):
         for pipe in self.pipeList:
             pipe["x"] -= self.pipeSpeed
 
+            # Scoring
             if not pipe["scored"] and pipe["x"] + self.pipeWidth < 100:
                 self.score += 1
                 pipe["scored"] = True
-                print("Score:", self.score)
+                if self.score > self.bestScore:
+                    self.bestScore = self.score
 
+            # Pipe reset
             if pipe["x"] < -self.pipeWidth:
                 # Find the rightmost pipe
                 furthestX = max(p["x"] for p in self.pipeList)
@@ -77,7 +82,35 @@ class FlappyGame(arcade.Window):
                 import random
                 pipe["gapY"] = random.randint(100, screenHeight - 100)
                 pipe["scored"] = False
+
+            # Pipe collision
+            pipeLeft = pipe["x"]
+            pipeRight = pipe["x"] + self.pipeWidth
+            gapY = pipe["gapY"]
+            gapHalf = self.pipeGap / 2
+            pipeBottom = gapY + gapHalf
+            pipeTop = gapY - gapHalf
             
+            # Bird collision
+            birdLeft = 100 - birdSize / 2
+            birdRight = 100 + birdSize / 2
+            birdBottom = self.birdY - birdSize / 2
+            birdTop = self.birdY + birdSize / 2
+            floorY = birdSize / 2
+            ceilingY = screenHeight - birdSize / 2
+
+            if birdTop > ceilingY or birdBottom < floorY:
+                print("Game Over!")
+                self.setup()
+                self.score = 0
+                break
+            
+            if pipeLeft < birdRight and pipeRight > birdLeft:
+                if birdTop > pipeBottom or birdBottom < pipeTop:
+                    print("Game Over!")
+                    self.setup()
+                    self.score = 0
+                    break
 
 
     def on_key_press(self, key, modifiers):
