@@ -13,7 +13,7 @@ class FlappyGame(arcade.Window):
     pipeSpeed = 2
     pipeGap = 150
     pipeWidth = 50
-    pipeSpace = 300
+    pipeSpace = 250
     numPipes = 3
 
     def __init__(self):
@@ -63,9 +63,12 @@ class FlappyGame(arcade.Window):
         for pipe in self.pipeList:
             pipe["x"] -= self.pipeSpeed
             if pipe["x"] < -self.pipeWidth:
-                pipe["x"] = screenWidth + self.pipeSpace
+                # Find the rightmost pipe
+                furthestX = max(p["x"] for p in self.pipeList)
+                pipe["x"] = furthestX + self.pipeSpace
                 import random
                 pipe["gapY"] = random.randint(100, screenHeight - 100)
+
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE:
