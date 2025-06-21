@@ -22,6 +22,7 @@ class FlappyGame(arcade.Window):
         self.birdVelocity = 0
         arcade.set_background_color(arcade.color.SKY_BLUE)
         self.set_update_rate(1/60)
+        self.score = 0
 
     def setup(self):
         self.birdY = screenHeight // 2
@@ -47,6 +48,7 @@ class FlappyGame(arcade.Window):
             arcade.draw_lrbt_rectangle_filled(left, right, gapY + gapHalf, screenHeight, arcade.color.BLACK)
             # bottom pipe
             arcade.draw_lrbt_rectangle_filled(left, right, 0, gapY - gapHalf, arcade.color.BLACK)
+            arcade.draw_text(f"Score: {self.score}", 10, screenHeight - 30, arcade.color.RED, 20)
 
     def update(self, deltaTime):
         print(f"Bird Y: {self.birdY}, Velocity: {self.birdVelocity}")  # DEBUG
@@ -62,12 +64,20 @@ class FlappyGame(arcade.Window):
         
         for pipe in self.pipeList:
             pipe["x"] -= self.pipeSpeed
+
+            if not pipe["scored"] and pipe["x"] + self.pipeWidth < 100:
+                self.score += 1
+                pipe["scored"] = True
+                print("Score:", self.score)
+
             if pipe["x"] < -self.pipeWidth:
                 # Find the rightmost pipe
                 furthestX = max(p["x"] for p in self.pipeList)
                 pipe["x"] = furthestX + self.pipeSpace
                 import random
                 pipe["gapY"] = random.randint(100, screenHeight - 100)
+                pipe["scored"] = False
+            
 
 
     def on_key_press(self, key, modifiers):
@@ -81,7 +91,7 @@ class FlappyGame(arcade.Window):
         for i in range(self.numPipes):
             x = screenWidth + i * self.pipeSpace
             gapY = random.randint(100, screenHeight - 100)
-            self.pipeList.append({"x": x, "gapY": gapY})
+            self.pipeList.append({"x": x, "gapY": gapY, "scored": False})
 
 if __name__ == "__main__":
     window = FlappyGame()
